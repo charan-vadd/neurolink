@@ -47,6 +47,15 @@ export {
   isValidProvider,
 } from "./utils/providerUtils.js";
 
+// URL Downloader exports
+export {
+  downloadFromUrl,
+  downloadAsBase64,
+  validateUrl,
+  ContentLengthError,
+} from "./utils/urlDownloader.js";
+export type { DownloadOptions, DownloadResult } from "./utils/urlDownloader.js";
+
 // Main NeuroLink wrapper class and diagnostic types
 export { NeuroLink } from "./neurolink.js";
 export type { ProviderStatus, MCPStatus } from "./neurolink.js";
