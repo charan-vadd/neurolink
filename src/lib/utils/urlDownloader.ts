@@ -7,6 +7,12 @@
 import { logger } from "./logger.js";
 
 /**
+ * Default User-Agent string for HTTP requests
+ */
+const NEUROLINK_USER_AGENT =
+  "NeuroLink/1.0 (+https://github.com/juspay/neurolink)";
+
+/**
  * Error thrown when content-length validation fails
  */
 export class ContentLengthError extends Error {
@@ -90,7 +96,7 @@ export async function downloadFromUrl(
     const response = await fetch(url, {
       method: "GET",
       headers: {
-        "User-Agent": "NeuroLink/1.0 (+https://github.com/juspay/neurolink)",
+        "User-Agent": NEUROLINK_USER_AGENT,
         ...headers,
       },
       signal: controller.signal,
@@ -204,13 +210,26 @@ export async function downloadAsBase64(
 ): Promise<{ base64: string; contentType: string | null }> {
   const result = await downloadFromUrl(url, options);
 
-  // Convert ArrayBuffer to base64
-  const bytes = new Uint8Array(result.data);
-  let binary = "";
-  for (let i = 0; i < bytes.byteLength; i++) {
-    binary += String.fromCharCode(bytes[i]);
+  // Convert ArrayBuffer to base64 efficiently using Buffer (Node.js)
+  // or fallback to btoa for browser environments
+  let base64: string;
+  if (typeof Buffer !== "undefined") {
+    // Node.js environment - use Buffer for efficient conversion
+    base64 = Buffer.from(result.data).toString("base64");
+  } else {
+    // Browser environment - use btoa with Uint8Array
+    const bytes = new Uint8Array(result.data);
+    let binary = "";
+    const chunkSize = 8192; // Process in chunks to avoid stack overflow
+    for (let i = 0; i < bytes.byteLength; i += chunkSize) {
+      const chunk = bytes.subarray(
+        i,
+        Math.min(i + chunkSize, bytes.byteLength),
+      );
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    base64 = btoa(binary);
   }
-  const base64 = btoa(binary);
 
   return {
     base64,

@@ -150,9 +150,14 @@ describe("URL Downloader", () => {
       };
       mockFetch.mockResolvedValue(mockResponse);
 
+      // Verify error is thrown with correct properties
+      const promise = downloadFromUrl("https://example.com/empty.txt");
+      await expect(promise).rejects.toThrow(ContentLengthError);
+
+      // Test again to verify specific error properties
+      mockFetch.mockResolvedValue(mockResponse);
       try {
         await downloadFromUrl("https://example.com/empty.txt");
-        expect.fail("Should have thrown ContentLengthError");
       } catch (error) {
         expect(error).toBeInstanceOf(ContentLengthError);
         const contentLengthError = error as ContentLengthError;
